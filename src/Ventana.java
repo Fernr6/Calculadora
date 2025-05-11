@@ -57,7 +57,7 @@ public class Ventana extends JFrame {
         JButton boton1 = new JButton();
         boton1.setText("Hola");
         boton1.setBounds(100, 100, 100, 40);
-        boton1.setEnabled(true);
+        boton1.setEnabled(true); //Controlar si el boton es utilizable
         boton1.setMnemonic('a'); //Utilizar boton con alt + 'a'
         panel.add(boton1);
     }
