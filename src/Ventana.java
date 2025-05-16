@@ -2,10 +2,14 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Image;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.SwingConstants;
 
 public class Ventana extends JFrame {
@@ -27,7 +31,8 @@ public class Ventana extends JFrame {
         Paneles();
         //Etiquetas();
         Botones();
-        
+        //RadioBotones();
+
     }
     
     private void Paneles(){
@@ -56,10 +61,43 @@ public class Ventana extends JFrame {
     private void Botones(){
         JButton boton1 = new JButton();
         boton1.setText("Hola");
-        boton1.setBounds(100, 100, 100, 40);
         boton1.setEnabled(true); //Controlar si el boton es utilizable
         boton1.setMnemonic('a'); //Utilizar boton con alt + 'a'
+        boton1.setBounds(200, 100, 80, 50); //Posicion y tamaño de boton
+        boton1.setForeground(Color.BLUE);//Color de texto en boton
+        boton1.setFont(new Font("times new roman", 3, 20)); //Ajustes Font de texto del boton
+        
+        JButton boton2 = new JButton();
+        boton2.setText("Adios");
+        boton2.setEnabled(true);
+        boton2.setOpaque(true);
+        ImageIcon click = new ImageIcon("images.png");
+        boton2.setBounds(200, 200, 80, 50);
+        boton2.setIcon(new ImageIcon(click.getImage().getScaledInstance(boton2.getWidth(), boton2.getHeight(), Image.SCALE_SMOOTH)));
+        
         panel.add(boton1);
+        panel.add(boton2);
+    }
+
+    private void RadioBotones(){
+        JRadioButton radio1 = new JRadioButton("Opcion 1", false);
+        radio1.setBounds(50,100,100,50);
+
+        JRadioButton radio2 = new JRadioButton("Opcion 2", false);
+        radio2.setBounds(50,135,100,50);
+
+        JRadioButton radio3 = new JRadioButton("Opcion 3", false);
+        radio3.setBounds(50,165,100,50);
+
+        panel.add(radio1);
+        panel.add(radio2);
+        panel.add(radio3);
+
+        ButtonGroup radBotones = new ButtonGroup();
+        radBotones.add(radio1);
+        radBotones.add(radio2);
+        radBotones.add(radio3);
+
     }
 
 }
