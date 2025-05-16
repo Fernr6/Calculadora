@@ -1,12 +1,14 @@
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 public class Ventana extends JFrame {
@@ -26,9 +28,10 @@ public class Ventana extends JFrame {
 
     private void initComponentes(){
         Paneles();
-        Etiquetas();
-        Botones();
-        RadioBotones();
+        //Etiquetas();
+        //Botones();
+        //RadioBotones();
+        TextBox();
 
     }
     
@@ -85,6 +88,21 @@ public class Ventana extends JFrame {
         radBotones.add(radio1);
         radBotones.add(radio2);
         radBotones.add(radio3);
+
+    }
+
+    private void TextBox(){
+        JTextField emailBox = new JTextField();
+        emailBox.setBounds(50,50,200,30);
+        emailBox.setText("Escribe tu E-Mail");
+
+        JTextField nameBox = new JTextField();
+        nameBox.setBounds(50,100,200,60);
+        nameBox.setText("First name, please...");
+        nameBox.setFont(new Font("Arial", Font.BOLD, 15));
+
+        panel.add(emailBox);
+        panel.add(nameBox);
 
     }
 
