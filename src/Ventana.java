@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -28,10 +29,11 @@ public class Ventana extends JFrame {
 
     private void initComponentes(){
         Paneles();
-        //Etiquetas();
-        //Botones();
+        Etiquetas();
+        Botones();
         //RadioBotones();
-        TextBox();
+        //TextBox();
+        DropDown();
 
     }
     
@@ -47,7 +49,7 @@ public class Ventana extends JFrame {
 
         JLabel etiqueta = new JLabel("Lenguajes:", SwingConstants.CENTER); //Crear etiqueta (texto, alineacion horizontal)
     
-        etiqueta.setBounds(40,80,100,20); //Posicion de etiqueta
+        etiqueta.setBounds(100,80,100,20); //Posicion de etiqueta
     
         //etiqueta.setForeground(Color.BLACK); //Color de letra de etiqueta
         etiqueta.setOpaque(false); //Establecer fondo de etiqueta
@@ -60,10 +62,10 @@ public class Ventana extends JFrame {
 
     private void Botones(){
         JButton boton1 = new JButton();
-        boton1.setText("Validar");
+        boton1.setText("Show");
         boton1.setEnabled(true); //Controlar si el boton es utilizable
-        boton1.setMnemonic('a'); //Utilizar boton con alt + 'a'
-        boton1.setBounds(50, 220, 80, 50); //Posicion y tamaño de boton
+        //boton1.setMnemonic('a'); //Utilizar boton con alt + 'a'
+        boton1.setBounds(200, 150, 85, 50); //Posicion y tamaño de boton
         boton1.setForeground(Color.BLUE);//Color de texto en boton
         //boton1.setFont(new Font("times new roman", 3, 20)); //Ajustes Font de texto del boton
                 
@@ -103,6 +105,17 @@ public class Ventana extends JFrame {
 
         panel.add(emailBox);
         panel.add(nameBox);
+
+    }
+
+    private void DropDown(){
+        String [] opciones = {"C","C++","C#","PHP","Java"};
+
+        JComboBox desplegable = new JComboBox(opciones);
+        desplegable.addItem("n/a");
+        desplegable.setSelectedItem("n/a");
+        desplegable.setBounds(20,150,100,30);
+        panel.add(desplegable);
 
     }
 
