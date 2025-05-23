@@ -1,122 +1,361 @@
+// Define la interfaz gráfica de usuario (GUI) de la calculadora.
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Stack;
 
-public class Ventana extends JFrame {
+public class Ventana extends JFrame implements ActionListener {
 
-    public JPanel panel;
+    private JTextField display; // Muestra entradas y resultados.
+    private JTextArea historyDisplay; // Muestra el historial de operaciones.
+    private CalculadoraCientifica calculadora; // Lógica de la calculadora.
 
-    public Ventana(){
-        setSize(500,700); //Tamaño de ventana
-        setLocationRelativeTo(null); //Colocar ventana en el centro al abrir programa
-        setMinimumSize(new Dimension(300,500)); //Tamaño minimo de ventana
+    private StringBuilder currentNumberString; // Número actual tecleado.
+    private double lastResult; // Resultado de la última operación '='.
+    private boolean isResultDisplayed; // Si el display muestra un resultado final.
 
-        setDefaultCloseOperation(EXIT_ON_CLOSE); //Cerrar programa al cerrar ventana
-        setTitle("Calculadora"); //Titulo ventana
+    // Nuevas variables para la funcionalidad de repetir operación
+    private String lastOperandString; // Almacena el último número antes del operador
+    private String lastOperator;      // Almacena el último operador
+    private boolean isRepeatOperation; // Bandera para saber si estamos en modo de repetición
 
-        initComponentes(); 
+    public Ventana() {
+        // Configuración de la ventana.
+        setTitle("Calculadora");
+        setSize(400, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        calculadora = new CalculadoraCientifica();
+        currentNumberString = new StringBuilder();
+        lastResult = 0;
+        isResultDisplayed = true;
+
+        // Inicializar las nuevas variables
+        lastOperandString = "";
+        lastOperator = "";
+        isRepeatOperation = false;
+
+        // Configuración del display principal.
+        display = new JTextField("0");
+        display.setEditable(false);
+        display.setFont(new Font("Inter", Font.PLAIN, 32));
+        display.setHorizontalAlignment(SwingConstants.RIGHT);
+        display.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        add(display, BorderLayout.NORTH);
+
+        // Panel contenedor para el historial y los botones
+        JPanel centerPanel = new JPanel(new BorderLayout());
+
+        // Configuración del panel de historial.
+        historyDisplay = new JTextArea();
+        historyDisplay.setEditable(false);
+        historyDisplay.setFont(new Font("Inter", Font.PLAIN, 14));
+        historyDisplay.setLineWrap(true);
+        historyDisplay.setWrapStyleWord(true);
+        JScrollPane historyScrollPane = new JScrollPane(historyDisplay);
+        historyScrollPane.setPreferredSize(new Dimension(380, 100));
+        historyScrollPane.setBorder(BorderFactory.createTitledBorder("Historial de Operaciones"));
+        centerPanel.add(historyScrollPane, BorderLayout.NORTH); // Agrega el historial en la parte superior del centerPanel
+
+        // Panel para los botones.
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(8, 5, 5, 5));
+
+        // Etiquetas de los botones (modificadas para agrupar paréntesis)
+        String[] buttonLabels = {
+                "C", "CE", "%", "/", "sqrt",
+                "sin", "cos", "tan", "ln", "log",
+                "7", "8", "9", "*", "^",
+                "4", "5", "6", "-", "!",
+                "1", "2", "3", "+", "(",
+                "0", ".", "=", ")", "pi",
+                "e", "asin", "acos", "atan", "sinh", "cosh"
+        };
+
+
+        // Creación y adición de botones.
+        for (String label : buttonLabels) {
+            JButton button = new JButton(label);
+            button.setFont(new Font("Inter", Font.PLAIN, 20));
+            button.addActionListener(this);
+            button.setFocusPainted(false);
+            button.setBackground(new Color(240, 240, 240));
+            button.setForeground(Color.BLACK);
+            button.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true));
+
+            // Estilos específicos para algunos botones.
+            switch (label) {
+                case "=":
+                    button.setBackground(new Color(78, 156, 206));
+                    button.setForeground(Color.WHITE);
+                    break;
+                case "+": case "-": case "*": case "/": case "^":
+                    button.setBackground(new Color(255, 165, 0));
+                    button.setForeground(Color.WHITE);
+                    break;
+                case "C": case "CE":
+                    button.setBackground(new Color(220, 50, 50));
+                    button.setForeground(Color.WHITE);
+                    break;
+                case "sin": case "cos": case "tan": case "ln": case "log":
+                case "sqrt": case "!": case "pi": case "e":
+                case "asin": case "acos": case "atan": case "sinh": case "cosh":
+                case "(": case ")": // Agregamos los paréntesis para el estilo
+                    button.setBackground(new Color(100, 180, 100));
+                    button.setForeground(Color.WHITE);
+                    break;
+            }
+            buttonPanel.add(button);
+        }
+
+        centerPanel.add(buttonPanel, BorderLayout.CENTER); // Agrega el buttonPanel en el centro del centerPanel
+        add(centerPanel, BorderLayout.CENTER); // Agrega el centerPanel completo al centro de la Ventana
     }
 
-    private void initComponentes(){
-        Paneles();
-        Etiquetas();
-        Botones();
-        //RadioBotones();
-        //TextBox();
-        DropDown();
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        String command = e.getActionCommand();
 
-    }
-    
-    private void Paneles(){
-        
-        panel = new JPanel(); //Creacion de panel
-        panel.setLayout( null); //Desactivar diseño
-        this.getContentPane().add(panel); //agregar panel a ventana
+        try {
+            if (Character.isDigit(command.charAt(0)) || command.equals(".")) {
+                // Maneja dígitos y punto decimal.
+                if (isResultDisplayed || isRepeatOperation) { // Si hay un resultado o estamos en modo repetición, empezar un número nuevo
+                    display.setText(command);
+                    currentNumberString.setLength(0);
+                    currentNumberString.append(command);
+                    isResultDisplayed = false;
+                    isRepeatOperation = false; // Nueva entrada, salir del modo repetición
+                } else {
+                    if (command.equals(".") && currentNumberString.indexOf(".") != -1) {
+                        return;
+                    }
+                    display.setText(display.getText() + command);
+                    currentNumberString.append(command);
+                }
+            } else if (command.equals("C")) {
+                // Borra todo.
+                display.setText("0");
+                historyDisplay.setText("");
+                currentNumberString.setLength(0);
+                lastResult = 0;
+                isResultDisplayed = true;
+                lastOperandString = "";
+                lastOperator = "";
+                isRepeatOperation = false;
+                calculadora.clear();
+            } else if (command.equals("CE")) {
+                // Borra la última entrada.
+                if (currentNumberString.length() > 0) {
+                    String currentDisplayText = display.getText();
+                    String numToRemove = currentNumberString.toString();
+                    int lastIndex = currentDisplayText.lastIndexOf(numToRemove);
+                    if (lastIndex != -1) {
+                        display.setText(currentDisplayText.substring(0, lastIndex));
+                    }
+                    currentNumberString.setLength(0);
+                    if (display.getText().isEmpty()) {
+                        display.setText("0");
+                        isResultDisplayed = true;
+                        isRepeatOperation = false;
+                    }
+                } else if (isResultDisplayed) {
+                    display.setText("0");
+                    lastResult = 0;
+                    isResultDisplayed = true;
+                    isRepeatOperation = false;
+                }
+            } else if (command.equals("=")) {
+                String expressionToEvaluate;
+                double result;
 
-    }
-    
-    private void Etiquetas(){
+                if (isRepeatOperation && !lastOperator.isEmpty() && !lastOperandString.isEmpty()) {
+                    // Si estamos en modo repetición y hay una última operación válida
+                    expressionToEvaluate = String.valueOf(lastResult) + lastOperator + lastOperandString;
+                    result = calculadora.evaluateExpression(expressionToEvaluate);
+                    historyDisplay.append(String.valueOf(lastResult) + lastOperator + lastOperandString + " = " + String.valueOf(result) + "\n");
 
-        JLabel etiqueta = new JLabel("Lenguajes:", SwingConstants.CENTER); //Crear etiqueta (texto, alineacion horizontal)
-    
-        etiqueta.setBounds(100,80,100,20); //Posicion de etiqueta
-    
-        //etiqueta.setForeground(Color.BLACK); //Color de letra de etiqueta
-        etiqueta.setOpaque(false); //Establecer fondo de etiqueta
-        etiqueta.setBackground(Color.BLACK); //Color de fondo de etiqueta
-        //etiqueta.setFont(new Font("times new roman",Font.BOLD,30)); //Fuente de texto
-    
-        panel.add(etiqueta); //Agregar etiqueta
+                } else {
+                    // Primera vez que se presiona '=' o se inició una nueva operación
+                    expressionToEvaluate = display.getText();
+                    result = calculadora.evaluateExpression(expressionToEvaluate);
 
-    }
+                    // Almacenar la última operación para posibles repeticiones
+                    if (currentNumberString.length() > 0) { // Si hay un número actual, significa que el último elemento fue un número
+                        lastOperandString = currentNumberString.toString();
+                        // Intentar extraer el último operador de la expresión si hay uno
+                        // Esto es una simplificación; un parser más robusto sería mejor.
+                        // Para operadores binarios simples:
+                        int lastOpIndex = -1;
+                        if (expressionToEvaluate.contains("+")) lastOpIndex = Math.max(lastOpIndex, expressionToEvaluate.lastIndexOf('+'));
+                        if (expressionToEvaluate.contains("-")) lastOpIndex = Math.max(lastOpIndex, expressionToEvaluate.lastIndexOf('-'));
+                        if (expressionToEvaluate.contains("*")) lastOpIndex = Math.max(lastOpIndex, expressionToEvaluate.lastIndexOf('*'));
+                        if (expressionToEvaluate.contains("/")) lastOpIndex = Math.max(lastOpIndex, expressionToEvaluate.lastIndexOf('/'));
+                        if (expressionToEvaluate.contains("^")) lastOpIndex = Math.max(lastOpIndex, expressionToEvaluate.lastIndexOf('^'));
 
-    private void Botones(){
-        JButton boton1 = new JButton();
-        boton1.setText("Show");
-        boton1.setEnabled(true); //Controlar si el boton es utilizable
-        //boton1.setMnemonic('a'); //Utilizar boton con alt + 'a'
-        boton1.setBounds(200, 150, 85, 50); //Posicion y tamaño de boton
-        boton1.setForeground(Color.BLUE);//Color de texto en boton
-        //boton1.setFont(new Font("times new roman", 3, 20)); //Ajustes Font de texto del boton
+                        if (lastOpIndex != -1) {
+                            lastOperator = String.valueOf(expressionToEvaluate.charAt(lastOpIndex));
+                        } else {
+                            lastOperator = ""; // No hay operador binario simple para repetir
+                        }
+                    } else {
+                        lastOperandString = String.valueOf(lastResult); // Si no hay número actual, el último operando es el resultado anterior
+                        lastOperator = ""; // No se puede repetir sin un operador previo
+                    }
+                    isRepeatOperation = true; // Activar el modo repetición
+                    historyDisplay.append(expressionToEvaluate + " = " + String.valueOf(result) + "\n");
+                }
+
+                display.setText(String.valueOf(result));
+                lastResult = result;
+                currentNumberString.setLength(0); // Limpiar para la próxima entrada de número
+                currentNumberString.append(String.valueOf(result)); // Establecer el resultado como el número actual para futuras operaciones
+                isResultDisplayed = true;
+
+            } else if (command.equals("pi") || command.equals("e") || isFunction(command)) {
+                // Maneja constantes y funciones científicas.
+                // Estas operaciones no inician un modo de repetición de la última operación binaria.
+                // Simplemente se aplican al valor actual o se insertan.
+                isRepeatOperation = false;
+                lastOperator = ""; // Limpiar el último operador ya que la operación no es binaria simple
                 
-        panel.add(boton1);
+                if (command.equals("pi")) {
+                    if (isResultDisplayed || display.getText().equals("0")) {
+                        display.setText(String.valueOf(Math.PI));
+                    } else {
+                        display.setText(display.getText() + String.valueOf(Math.PI));
+                    }
+                    currentNumberString.setLength(0);
+                    currentNumberString.append(String.valueOf(Math.PI));
+                    isResultDisplayed = false;
+                } else if (command.equals("e")) {
+                    if (isResultDisplayed || display.getText().equals("0")) {
+                        display.setText(String.valueOf(Math.E));
+                    } else {
+                        display.setText(display.getText() + String.valueOf(Math.E));
+                    }
+                    currentNumberString.setLength(0);
+                    currentNumberString.append(String.valueOf(Math.E));
+                    isResultDisplayed = false;
+                } else if (isFunction(command)) {
+                    double valueToOperateOn;
+                    if (currentNumberString.length() > 0 && !isResultDisplayed) {
+                        valueToOperateOn = Double.parseDouble(currentNumberString.toString());
+                    } else {
+                        // Si no hay un número actual tecleado, toma el valor actual del display
+                        valueToOperateOn = Double.parseDouble(display.getText());
+                    }
+
+                    double result = 0;
+                    switch (command) {
+                        case "sqrt": result = calculadora.getSqrt(valueToOperateOn); break;
+                        case "!": result = calculadora.getFactorial((int) valueToOperateOn); break;
+                        case "%": result = calculadora.getPercentage(valueToOperateOn); break;
+                        case "sin": result = calculadora.getSin(valueToOperateOn); break;
+                        case "cos": result = calculadora.getCos(valueToOperateOn); break;
+                        case "tan": result = calculadora.getTan(valueToOperateOn); break;
+                        case "ln": result = calculadora.getLn(valueToOperateOn); break;
+                        case "log": result = calculadora.getLog(valueToOperateOn); break;
+                        case "asin": result = calculadora.getASin(valueToOperateOn); break;
+                        case "acos": result = calculadora.getACos(valueToOperateOn); break;
+                        case "atan": result = calculadora.getATan(valueToOperateOn); break;
+                        case "sinh": result = calculadora.getSinh(valueToOperateOn); break;
+                        case "cosh": result = calculadora.getCosh(valueToOperateOn); break;
+                    }
+                    display.setText(String.valueOf(result));
+                    lastResult = result;
+                    currentNumberString.setLength(0);
+                    currentNumberString.append(String.valueOf(result));
+                    isResultDisplayed = true;
+                }
+            } else if (command.equals("(") || command.equals(")")) {
+                // Maneja paréntesis. No inician modo de repetición.
+                isRepeatOperation = false;
+                lastOperator = ""; // Limpiar el último operador
+
+                if (command.equals("(")) {
+                    if (isResultDisplayed) {
+                        display.setText("(");
+                    } else {
+                        display.setText(display.getText() + "(");
+                    }
+                } else { // command.equals(")")
+                    if (isResultDisplayed && display.getText().equals("0")) {
+                        return; // Evita añadir un ')' a un '0' vacío
+                    }
+                    display.setText(display.getText() + ")");
+                }
+                currentNumberString.setLength(0); // Limpiar currentNumberString para el contenido dentro/después del paréntesis
+                isResultDisplayed = false;
+
+            } else { // Operadores binarios (+, -, *, /, ^)
+                // Almacenar el número actual y el operador para posibles repeticiones
+                if (currentNumberString.length() > 0) {
+                    lastOperandString = currentNumberString.toString();
+                } else if (isResultDisplayed) {
+                    // Si el display ya muestra un resultado y no se ha tecleado un nuevo número
+                    // el lastOperand es el resultado anterior (útil para encadenar operaciones)
+                    lastOperandString = String.valueOf(lastResult);
+                } else {
+                    // Si no hay currentNumberString ni resultado, no hay un operando claro para repetir
+                    lastOperandString = "";
+                }
+                lastOperator = command;
+                isRepeatOperation = false; // Al presionar un nuevo operador, se sale del modo repetición
+
+                if (isResultDisplayed) {
+                    display.setText(String.valueOf(lastResult) + command);
+                } else {
+                    display.setText(display.getText() + command);
+                }
+                currentNumberString.setLength(0); // Reset currentNumberString para el siguiente número
+                isResultDisplayed = false;
+            }
+        } catch (NumberFormatException ex) {
+            display.setText("Error: Formato");
+            currentNumberString.setLength(0);
+            currentNumberString.append("0");
+            isResultDisplayed = true;
+            isRepeatOperation = false;
+            lastOperandString = "";
+            lastOperator = "";
+        } catch (ArithmeticException ex) {
+            display.setText("Error: " + ex.getMessage());
+            currentNumberString.setLength(0);
+            currentNumberString.append("0");
+            isResultDisplayed = true;
+            isRepeatOperation = false;
+            lastOperandString = "";
+            lastOperator = "";
+        } catch (IllegalArgumentException ex) {
+            display.setText("Error: " + ex.getMessage());
+            currentNumberString.setLength(0);
+            currentNumberString.append("0");
+            isResultDisplayed = true;
+            isRepeatOperation = false;
+            lastOperandString = "";
+            lastOperator = "";
+        } catch (Exception ex) {
+            display.setText("Error");
+            currentNumberString.setLength(0);
+            currentNumberString.append("0");
+            isResultDisplayed = true;
+            isRepeatOperation = false;
+            lastOperandString = "";
+            lastOperator = "";
+            ex.printStackTrace();
+        }
     }
 
-    private void RadioBotones(){
-        JRadioButton radio1 = new JRadioButton("Java", false);
-        radio1.setBounds(50,100,100,50);
-
-        JRadioButton radio2 = new JRadioButton("PHP", false);
-        radio2.setBounds(50,135,100,50);
-
-        JRadioButton radio3 = new JRadioButton("C++", false);
-        radio3.setBounds(50,165,100,50);
-
-        panel.add(radio1);
-        panel.add(radio2);
-        panel.add(radio3);
-
-        ButtonGroup radBotones = new ButtonGroup();
-        radBotones.add(radio1);
-        radBotones.add(radio2);
-        radBotones.add(radio3);
-
+    // Verifica si un comando es una función científica.
+    private boolean isFunction(String command) {
+        return command.equals("sqrt") || command.equals("!") || command.equals("%") ||
+                command.equals("sin") || command.equals("cos") || command.equals("tan") ||
+                command.equals("ln") || command.equals("log") ||
+                command.equals("asin") || command.equals("acos") || command.equals("atan") ||
+                command.equals("sinh") || command.equals("cosh");
     }
-
-    private void TextBox(){
-        JTextField emailBox = new JTextField();
-        emailBox.setBounds(50,50,200,30);
-        emailBox.setText("Escribe tu E-Mail");
-
-        JTextField nameBox = new JTextField();
-        nameBox.setBounds(50,100,200,60);
-        nameBox.setText("First name, please...");
-        nameBox.setFont(new Font("Arial", Font.BOLD, 15));
-
-        panel.add(emailBox);
-        panel.add(nameBox);
-
-    }
-
-    private void DropDown(){
-        String [] opciones = {"C","C++","C#","PHP","Java"};
-
-        JComboBox desplegable = new JComboBox(opciones);
-        desplegable.addItem("n/a");
-        desplegable.setSelectedItem("n/a");
-        desplegable.setBounds(20,150,100,30);
-        panel.add(desplegable);
-
-    }
-
 }
