@@ -1,15 +1,11 @@
-// Contiene la lógica de las operaciones matemáticas.
-
 import java.util.Stack;
 
 public class CalculadoraCientifica {
 
-    // Limpia el estado de la calculadora.
     public void clear() {
-        // No hay estado persistente que limpiar aquí.
+        // No hace nada, solo para consistencia.
     }
 
-    // --- Funciones Básicas ---
     public double add(double a, double b) { return a + b; }
     public double subtract(double a, double b) { return a - b; }
     public double multiply(double a, double b) { return a * b; }
@@ -18,7 +14,6 @@ public class CalculadoraCientifica {
         return a / b;
     }
 
-    // --- Funciones Científicas ---
     public double getSqrt(double value) {
         if (value < 0) throw new ArithmeticException("Raíz cuadrada de un número negativo");
         return Math.sqrt(value);
@@ -55,13 +50,7 @@ public class CalculadoraCientifica {
     }
     public double getPercentage(double value) { return value / 100.0; }
 
-    /**
-     * Evalúa una expresión matemática infija.
-     * @param expression Expresión a evaluar.
-     * @return Resultado de la evaluación.
-     */
     public double evaluateExpression(String expression) {
-        // Reemplaza constantes.
         expression = expression.replace("pi", String.valueOf(Math.PI));
         expression = expression.replace("e", String.valueOf(Math.E));
         expression = expression.replaceAll("\\s+", "");
@@ -104,12 +93,10 @@ public class CalculadoraCientifica {
         return values.pop();
     }
 
-    // Verifica si un carácter es un operador.
     private boolean isOperator(char ch) {
         return ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '^';
     }
 
-    // Compara la precedencia de operadores.
     private boolean hasPrecedence(char op1, char op2) {
         if (op2 == '(' || op2 == ')') return false;
         if (op1 == '^') return true;
@@ -117,7 +104,6 @@ public class CalculadoraCientifica {
         return false;
     }
 
-    // Aplica una operación a dos operandos.
     private double applyOp(char op, double b, double a) {
         switch (op) {
             case '+': return add(a, b);
