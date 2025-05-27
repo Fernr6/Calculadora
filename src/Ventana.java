@@ -2,7 +2,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Set;
-import javax.swing.*; // Necesario para la detección de operadores
+import javax.swing.*; 
 
 public class Ventana extends JFrame implements ActionListener {
 
@@ -82,7 +82,7 @@ public class Ventana extends JFrame implements ActionListener {
         centerPanel.add(historyScrollPane, BorderLayout.NORTH);
 
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(9, 5, 8, 8)); // 9 filas para acomodar +/- y DEL
+        buttonPanel.setLayout(new GridLayout(9, 5, 8, 8)); // 9 filas para +/- y DEL
         buttonPanel.setBackground(backgroundDark);
 
         String[] buttonLabels = {
@@ -120,7 +120,7 @@ public class Ventana extends JFrame implements ActionListener {
                 case "sin": case "cos": case "tan": case "ln": case "log":
                 case "sqrt": case "!": case "pi": case "e":
                 case "asin": case "acos": case "atan": case "sinh": case "cosh":
-                case "(": case ")": case "%": case "+/-": // +/- también es una función científica/manipuladora
+                case "(": case ")": case "%": case "+/-": // +/- tambien es una función científica/manipuladora
                     button.setBackground(scientificBg);
                     button.setForeground(Color.WHITE);
                     break;

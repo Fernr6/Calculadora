@@ -3,7 +3,7 @@ import java.util.Stack;
 public class CalculadoraCientifica {
 
     public void clear() {
-        // No hace nada, solo para consistencia.
+        // No hace nada, solo para consistencia
     }
 
     public double add(double a, double b) { return a + b; }
